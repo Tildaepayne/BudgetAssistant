@@ -34,7 +34,7 @@
       <div class="page-header">
         <div>
           <h1>Processing pipeline</h1>
-          <p class="page-subtitle">Upload PDFs, define topics, and build a semantic index with Claude</p>
+          <p class="page-subtitle">Upload PDFs, define topics, and build a semantic index with <em>Llama 3</em>.</p>
         </div>
       </div>
 
@@ -43,16 +43,17 @@
         <!-- API Key -->
         <section class="card" id="stepKey">
           <div class="step-num">1</div>
-          <h2>API key</h2>
+          <!-- <h2>API key</h2> -->
+           <h2>Local model</h2>
           <div class="field-row">
-            <input type="password" id="apiKey" placeholder="sk-ant-api03-…" class="input-wide" />
-            <button class="btn-primary" onclick="saveKey()">
+            <input type="text" id="modelName" value="llama3" placeholder="sk-ant-api03-…" class="input-wide" />
+            <button class="btn-primary" onclick="saveModel()">
               <i class="ti ti-check"></i> Save
             </button>
           </div>
           <p class="hint">
-            Get your key from <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>.
-            Stored in <code>localStorage</code> — never sent anywhere except <code>api.anthropic.com</code>.
+            Llama 3 is a local model which will be used to classify document chunks.
+            Stored in <code>localStorage</code> — never sent anywhere.
           </p>
           <div class="key-status" id="keyStatus"></div>
         </section>
@@ -79,7 +80,7 @@
           <div class="step-num">3</div>
           <h2>Topic taxonomy</h2>
           <p class="hint" style="margin-bottom:12px">
-            Claude will tag each chunk with one or more of these topics.
+            The local LLM will tag each chunk with one or more of these topics.
             Edit to match your documents.
           </p>
           <div class="tag-wrap" id="tagWrap"></div>
@@ -99,12 +100,12 @@
             <div class="setting-row">
               <label for="chunkSize">Chunk size</label>
               <div class="range-row">
-                <input type="range" min="50" max="400" step="10" value="150" id="chunkSize"
+                <input type="range" min="50" max="400" step="10" value="300" id="chunkSize"
                        oninput="document.getElementById('csVal').textContent=this.value" />
-                <span class="range-val" id="csVal">150</span>
+                <span class="range-val" id="csVal">300</span>
                 <span class="range-unit">words</span>
               </div>
-              <p class="hint">100–200 is ideal for government budget documents. Larger chunks = fewer API calls but less granularity.</p>
+              <p class="hint">250–400 wordsis ideal for government budget documents. Larger chunks = fewer API calls but less granularity.</p>
             </div>
             <div class="setting-row">
               <label for="concurrency">Requests per second</label>
@@ -113,7 +114,7 @@
                        oninput="document.getElementById('concVal').textContent=this.value" />
                 <span class="range-val" id="concVal">2</span>
               </div>
-              <p class="hint">Higher = faster but may hit Claude rate limits. Keep at 2 to be safe.</p>
+              <p class="hint">Higher = faster but may increase CPU/RAM usage. Keep at 2 to be safe.</p>
             </div>
           </div>
         </section>
