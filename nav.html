@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Navigator</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <i class="ti ti-books"></i>
+        <span>Doc Navigator</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="index.html" class="nav-item">
+          <i class="ti ti-cpu"></i> Pipeline
+        </a>
+        <a href="navigator.html" class="nav-item active">
+          <i class="ti ti-layout-sidebar"></i> Navigator
+        </a>
+      </nav>
+      <div class="sidebar-footer" id="indexStatus2">No index loaded</div>
+    </aside>
+
+    <main class="main nav-main">
+
+      <!-- No index state -->
+      <div id="noIndexState" class="empty-page">
+        <i class="ti ti-database-off"></i>
+        <h2>No index loaded</h2>
+        <p>Run the pipeline first, then come back here — or load an existing <code>index.json</code> file.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:1rem">
+          <a href="index.html" class="btn-primary">
+            <i class="ti ti-cpu"></i> Go to pipeline
+          </a>
+          <label class="btn-secondary" style="cursor:pointer">
+            <i class="ti ti-upload"></i> Load index.json
+            <input type="file" accept=".json" style="display:none" onchange="loadIndexFile(event)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Navigator UI -->
+      <div id="navigatorUI" style="display:none; height:100%; display:none; flex-direction:column">
+
+        <div class="nav-toolbar">
+          <div class="nav-search-wrap">
+            <i class="ti ti-search nav-search-icon"></i>
+            <input type="text" id="navSearch" class="nav-search" placeholder="Search across all topics and documents…" oninput="onSearch(this.value)" />
+          </div>
+          <div class="toolbar-actions">
+            <label class="btn-secondary btn-sm" style="cursor:pointer">
+              <i class="ti ti-upload"></i> Load new index
+              <input type="file" accept=".json" style="display:none" onchange="loadIndexFile(event)" />
+            </label>
+            <button class="btn-secondary btn-sm" onclick="exportBriefing()">
+              <i class="ti ti-file-text"></i> Export briefing
+            </button>
+          </div>
+        </div>
+
+        <div class="nav-body">
+
+          <!-- Topic sidebar -->
+          <div class="topic-sidebar">
+            <div class="topic-sidebar-header">
+              <span class="ts-label">Topics</span>
+              <button class="ts-clear" onclick="clearTopic()" id="clearTopicBtn" style="display:none">Clear</button>
+            </div>
+            <div id="topicList" class="topic-list"></div>
+
+            <div class="doc-filter-section">
+              <div class="ts-label" style="padding:0 12px;margin-bottom:6px">Filter by document</div>
+              <div id="docFilterList" class="doc-filter-list"></div>
+            </div>
+          </div>
+
+          <!-- Results pane -->
+          <div class="results-pane" id="resultsPane">
+            <div class="results-header" id="resultsHeader" style="display:none">
+              <div>
+                <h2 id="resultsTitle">Select a topic</h2>
+                <p class="results-sub" id="resultsSub"></p>
+              </div>
+              <div class="results-actions">
+                <button class="btn-secondary btn-sm" id="conflictFilterBtn" onclick="toggleConflictFilter()" style="display:none">
+                  <i class="ti ti-alert-triangle"></i> Show conflicts only
+                </button>
+              </div>
+            </div>
+
+            <!-- Synthesis banner -->
+            <div class="synthesis-banner" id="synthesisBanner" style="display:none">
+              <i class="ti ti-sparkles"></i>
+              <div id="synthesisText"></div>
+              <button class="synthesis-ask" onclick="askClaude()">
+                Ask Claude for deeper analysis <i class="ti ti-arrow-right"></i>
+              </button>
+            </div>
+
+            <div id="resultsList" class="results-list">
+              <div class="empty-results">
+                <i class="ti ti-books"></i>
+                <p>Select a topic from the left to see all matching passages across your documents</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Source panel -->
+          <div class="source-panel" id="sourcePanel" style="display:none">
+            <div class="source-panel-header">
+              <span class="source-panel-title" id="sourcePanelTitle">Source</span>
+              <button class="source-close" onclick="closeSource()">
+                <i class="ti ti-x"></i>
+              </button>
+            </div>
+            <div class="source-panel-body" id="sourcePanelBody"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/navigator.js"></script>
+</body>
+</html>
