@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Navigator — Processing Pipeline</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Tabler icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <i class="ti ti-books"></i>
+        <span>Doc Navigator</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="index.html" class="nav-item active">
+          <i class="ti ti-cpu"></i> Pipeline
+        </a>
+        <a href="navigator.html" class="nav-item" id="navLink">
+          <i class="ti ti-layout-sidebar"></i> Navigator
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="indexStatus">No index loaded</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1>Processing pipeline</h1>
+          <p class="page-subtitle">Upload PDFs, define topics, and build a semantic index with Claude</p>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- API Key -->
+        <section class="card" id="stepKey">
+          <div class="step-num">1</div>
+          <h2>API key</h2>
+          <div class="field-row">
+            <input type="password" id="apiKey" placeholder="sk-ant-api03-…" class="input-wide" />
+            <button class="btn-primary" onclick="saveKey()">
+              <i class="ti ti-check"></i> Save
+            </button>
+          </div>
+          <p class="hint">
+            Get your key from <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>.
+            Stored in <code>localStorage</code> — never sent anywhere except <code>api.anthropic.com</code>.
+          </p>
+          <div class="key-status" id="keyStatus"></div>
+        </section>
+
+        <!-- Documents -->
+        <section class="card" id="stepDocs">
+          <div class="step-num">2</div>
+          <h2>Documents</h2>
+          <div class="drop-zone" id="dropZone"
+               onclick="document.getElementById('fileInput').click()"
+               ondragover="onDragOver(event)"
+               ondragleave="onDragLeave(event)"
+               ondrop="onDrop(event)">
+            <i class="ti ti-file-upload"></i>
+            <p>Drop PDFs here or click to browse</p>
+            <span class="drop-sub">Multiple files supported — each becomes a named document in the index</span>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf" multiple style="display:none" onchange="onFileSelect(event)" />
+          <div class="file-list" id="fileList"></div>
+        </section>
+
+        <!-- Taxonomy -->
+        <section class="card" id="stepTax">
+          <div class="step-num">3</div>
+          <h2>Topic taxonomy</h2>
+          <p class="hint" style="margin-bottom:12px">
+            Claude will tag each chunk with one or more of these topics.
+            Edit to match your documents.
+          </p>
+          <div class="tag-wrap" id="tagWrap"></div>
+          <div class="add-tag-row">
+            <input id="tagInput" class="input-tag" placeholder="Add topic (e.g. Housing)" onkeydown="if(event.key==='Enter')addTag()" />
+            <button class="btn-secondary" onclick="addTag()">
+              <i class="ti ti-plus"></i> Add
+            </button>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="card" id="stepSettings">
+          <div class="step-num">4</div>
+          <h2>Settings</h2>
+          <div class="settings-grid">
+            <div class="setting-row">
+              <label for="chunkSize">Chunk size</label>
+              <div class="range-row">
+                <input type="range" min="50" max="400" step="10" value="150" id="chunkSize"
+                       oninput="document.getElementById('csVal').textContent=this.value" />
+                <span class="range-val" id="csVal">150</span>
+                <span class="range-unit">words</span>
+              </div>
+              <p class="hint">100–200 is ideal for government budget documents. Larger chunks = fewer API calls but less granularity.</p>
+            </div>
+            <div class="setting-row">
+              <label for="concurrency">Requests per second</label>
+              <div class="range-row">
+                <input type="range" min="1" max="5" step="1" value="2" id="concurrency"
+                       oninput="document.getElementById('concVal').textContent=this.value" />
+                <span class="range-val" id="concVal">2</span>
+              </div>
+              <p class="hint">Higher = faster but may hit Claude rate limits. Keep at 2 to be safe.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Run -->
+        <section class="card run-card" id="stepRun">
+          <div class="step-num">5</div>
+          <h2>Run pipeline</h2>
+          <div class="run-estimate" id="runEstimate">
+            Add PDFs to see an estimate
+          </div>
+          <button class="btn-run" id="runBtn" onclick="runPipeline()">
+            <i class="ti ti-player-play"></i> Start processing
+          </button>
+        </section>
+
+        <!-- Progress -->
+        <section class="card" id="progressSection" style="display:none">
+          <h2>Progress</h2>
+          <div class="progress-header">
+            <span id="progLabel">Processing…</span>
+            <span id="progPct" class="prog-pct">0%</span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill" id="progBar" style="width:0%"></div>
+          </div>
+          <div class="log" id="logEl"></div>
+        </section>
+
+        <!-- Results -->
+        <section class="card" id="statsSection" style="display:none">
+          <h2>Index built</h2>
+          <div class="stats-grid">
+            <div class="stat"><div class="stat-val" id="statDocs">0</div><div class="stat-lbl">Documents</div></div>
+            <div class="stat"><div class="stat-val" id="statChunks">0</div><div class="stat-lbl">Chunks</div></div>
+            <div class="stat"><div class="stat-val" id="statTopics">0</div><div class="stat-lbl">Topics found</div></div>
+            <div class="stat"><div class="stat-val" id="statFigs">0</div><div class="stat-lbl">Key figures</div></div>
+          </div>
+          <div class="action-row">
+            <button class="btn-primary" onclick="downloadJSON()">
+              <i class="ti ti-download"></i> Download index.json
+            </button>
+            <button class="btn-secondary" onclick="loadIntoNavigator()">
+              <i class="ti ti-layout-sidebar"></i> Open in Navigator
+            </button>
+          </div>
+        </section>
+
+        <!-- Chunk preview -->
+        <section class="card" id="chunksSection" style="display:none">
+          <h2>Chunk preview <span id="chunkCountLabel" class="section-sub"></span></h2>
+          <p class="hint" style="margin-bottom:12px">Hover a chunk to see its original text.</p>
+          <div class="chunk-grid" id="chunkGrid"></div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/pipeline.js"></script>
+</body>
+</html>
